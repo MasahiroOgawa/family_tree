@@ -576,10 +576,10 @@ function fitToView() {
 function generateTemplate() {
     const headers = [
         'id',
-        'first_name',
         'family_name',
-        'first_name_furigana',
+        'first_name',
         'family_name_furigana',
+        'first_name_furigana',
         'birth_date',
         'death_date',
         'gender',
@@ -596,12 +596,12 @@ function generateTemplate() {
     ];
 
     const examples = [
-        ['person1', 'Taro', 'Yamada', 'タロウ', 'ヤマダ', '1950-01-15', '', 'male', 'person2', 'Tokyo', '', 'Engineer', 'Founder of the family business', '', '', 'person3', 'person4', ''],
-        ['person2', 'Hanako', 'Sato', 'ハナコ', 'サトウ', '1952-03-20', '', 'female', 'person1', 'Osaka', '', 'Teacher', '', '', '', '', '', ''],
-        ['person3', 'Ichiro', 'Yamada', 'イチロウ', 'ヤマダ', '1975-06-10', '', 'male', 'person5', 'Tokyo', '', 'Doctor', '', 'person1', 'person2', 'person6', '', ''],
-        ['person4', 'Yuki', 'Yamada', 'ユキ', 'ヤマダ', '1978-09-25', '', 'female', '', 'Tokyo', '', 'Artist', '', 'person1', 'person2', '', '', ''],
-        ['person5', 'Sakura', 'Tanaka', 'サクラ', 'タナカ', '1977-12-05', '', 'female', 'person3', 'Kyoto', '', 'Lawyer', '', '', '', '', '', ''],
-        ['person6', 'Ken', 'Yamada', 'ケン', 'ヤマダ', '2000-04-12', '', 'male', '', 'Tokyo', '', 'Student', '', 'person3', 'person5', '', '', '']
+        ['person1', 'Yamada', 'Taro', 'ヤマダ', 'タロウ', '1950-01-15', '', 'male', 'person2', 'Tokyo', '', 'Engineer', 'Founder of the family business', '', '', 'person3', 'person4', ''],
+        ['person2', 'Sato', 'Hanako', 'サトウ', 'ハナコ', '1952-03-20', '', 'female', 'person1', 'Osaka', '', 'Teacher', '', '', '', '', '', ''],
+        ['person3', 'Yamada', 'Ichiro', 'ヤマダ', 'イチロウ', '1975-06-10', '', 'male', 'person5', 'Tokyo', '', 'Doctor', '', 'person1', 'person2', 'person6', '', ''],
+        ['person4', 'Yamada', 'Yuki', 'ヤマダ', 'ユキ', '1978-09-25', '', 'female', '', 'Tokyo', '', 'Artist', '', 'person1', 'person2', '', '', ''],
+        ['person5', 'Tanaka', 'Sakura', 'タナカ', 'サクラ', '1977-12-05', '', 'female', 'person3', 'Kyoto', '', 'Lawyer', '', '', '', '', '', ''],
+        ['person6', 'Yamada', 'Ken', 'ヤマダ', 'ケン', '2000-04-12', '', 'male', '', 'Tokyo', '', 'Student', '', 'person3', 'person5', '', '', '']
     ];
 
     let csv = headers.join(',') + '\n';

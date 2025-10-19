@@ -22,10 +22,10 @@ A modern web-based application for visualizing family trees from CSV data. Uploa
 | Field | Description | Example |
 |-------|-------------|---------|
 | `id` | Unique identifier (hash/string) | person1, abc123 |
-| `first_name` | Given name | Taro |
 | `family_name` | Surname | Yamada |
-| `first_name_furigana` | Reading of first name (Japanese) | タロウ |
+| `first_name` | Given name | Taro |
 | `family_name_furigana` | Reading of family name (Japanese) | ヤマダ |
+| `first_name_furigana` | Reading of first name (Japanese) | タロウ |
 
 ### Optional Fields
 
@@ -48,10 +48,10 @@ A modern web-based application for visualizing family trees from CSV data. Uploa
 ### CSV Example
 
 ```csv
-id,first_name,family_name,first_name_furigana,family_name_furigana,birth_date,death_date,gender,married_with,birth_place,death_place,occupation,notes,father_id,mother_id,child_id1,child_id2
-person1,Taro,Yamada,タロウ,ヤマダ,1950-01-15,,male,person2,Tokyo,,Engineer,Founder of business,,,person3,person4
-person2,Hanako,Sato,ハナコ,サトウ,1952-03-20,,female,person1,Osaka,,Teacher,,,,,,
-person3,Ichiro,Yamada,イチロウ,ヤマダ,1975-06-10,,male,person4,Tokyo,,Doctor,,person1,person2,person5,
+id,family_name,first_name,family_name_furigana,first_name_furigana,birth_date,death_date,gender,married_with,birth_place,death_place,occupation,notes,father_id,mother_id,child_id1,child_id2
+person1,Yamada,Taro,ヤマダ,タロウ,1950-01-15,,male,person2,Tokyo,,Engineer,Founder of business,,,person3,person4
+person2,Sato,Hanako,サトウ,ハナコ,1952-03-20,,female,person1,Osaka,,Teacher,,,,,,
+person3,Yamada,Ichiro,ヤマダ,イチロウ,1975-06-10,,male,person4,Tokyo,,Doctor,,person1,person2,person5,
 ```
 
 ## Quick Start
