@@ -123,8 +123,8 @@ header p {
     padding: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     position: relative;
-    height: 700px;
-    overflow: hidden;
+    height: 800px;
+    overflow: auto;
 }
 
 .controls {
@@ -312,19 +312,21 @@ header p {
 }
 
 .family-name-text {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     fill: #333;
     cursor: pointer;
     pointer-events: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
 }
 
 .given-name-text {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
     fill: #333;
     cursor: pointer;
     pointer-events: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
 }
 
 .node text {
@@ -332,6 +334,7 @@ header p {
     font-weight: 500;
     fill: #333;
     cursor: pointer;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', sans-serif;
 }
 
 .link {

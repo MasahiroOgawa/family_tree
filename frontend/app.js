@@ -154,14 +154,15 @@ function renderTreeLayout(data) {
     }
 
     // Build hierarchy for each root - Japanese style (top to bottom)
-    const margin = { top: 60, right: 100, bottom: 60, left: 100 };
+    const margin = { top: 80, right: 120, bottom: 80, left: 120 };
     const treeWidth = width - margin.left - margin.right;
     const treeHeight = height - margin.top - margin.bottom;
 
     // Vertical tree layout (top to bottom)
     const treeLayout = d3.tree()
         .size([treeWidth, treeHeight])
-        .separation((a, b) => (a.parent === b.parent ? 1.2 : 1.5));
+        .nodeSize([150, 120])  // Fixed node spacing: [width spacing, height spacing]
+        .separation((a, b) => (a.parent === b.parent ? 1.5 : 2.0));
 
     let allNodes = [];
     let allLinks = [];
@@ -230,9 +231,9 @@ function renderTreeLayout(data) {
         .attr('class', d => `node ${d.data.gender || ''}`)
         .attr('transform', d => `translate(${d.x},${d.y})`);
 
-    // Box dimensions
-    const boxWidth = 80;
-    const boxHeight = 60;
+    // Box dimensions - larger to prevent text overflow
+    const boxWidth = 100;
+    const boxHeight = 70;
 
     // Draw box background
     node.append('rect')
@@ -241,6 +242,8 @@ function renderTreeLayout(data) {
         .attr('width', boxWidth)
         .attr('height', boxHeight)
         .attr('class', 'person-box')
+        .attr('rx', 4)  // Rounded corners
+        .attr('ry', 4)
         .on('click', (event, d) => showPersonDetails(d.data));
 
     // Draw divider line between family name and given name
@@ -254,7 +257,7 @@ function renderTreeLayout(data) {
 
     // Family name (姓) - top half
     node.append('text')
-        .attr('dy', -8)
+        .attr('dy', -10)
         .attr('text-anchor', 'middle')
         .attr('class', 'family-name-text')
         .text(d => d.data.family_name || '姓')
@@ -262,17 +265,17 @@ function renderTreeLayout(data) {
 
     // Given name (名) - bottom half
     node.append('text')
-        .attr('dy', 18)
+        .attr('dy', 20)
         .attr('text-anchor', 'middle')
         .attr('class', 'given-name-text')
         .text(d => d.data.first_name || '名')
         .on('click', (event, d) => showPersonDetails(d.data));
 
-    // Add furigana if available (small text above)
+    // Add furigana if available (small text above box)
     node.append('text')
-        .attr('dy', -boxHeight / 2 - 5)
+        .attr('dy', -boxHeight / 2 - 10)
         .attr('text-anchor', 'middle')
-        .attr('font-size', '9px')
+        .attr('font-size', '10px')
         .attr('fill', '#666')
         .text(d => {
             if (d.data.family_name_furigana || d.data.first_name_furigana) {
@@ -283,9 +286,9 @@ function renderTreeLayout(data) {
 
     // Add birth-death years below box
     node.append('text')
-        .attr('dy', boxHeight / 2 + 15)
+        .attr('dy', boxHeight / 2 + 20)
         .attr('text-anchor', 'middle')
-        .attr('font-size', '10px')
+        .attr('font-size', '11px')
         .attr('fill', '#666')
         .text(d => {
             const person = d.data;
