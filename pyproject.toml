@@ -1,0 +1,14 @@
+[project]
+name = "family-tree"
+version = "1.0.0"
+description = "A web-based family tree visualization application"
+requires-python = ">=3.8"
+dependencies = [
+    "flask>=3.0.0",
+    "flask-cors>=4.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]

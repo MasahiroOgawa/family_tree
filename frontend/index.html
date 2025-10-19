@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family Tree Viewer</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌳 Family Tree Viewer</h1>
+            <p>Upload a CSV file to visualize your family tree</p>
+        </header>
+
+        <div class="upload-section">
+            <div class="upload-box" id="uploadBox">
+                <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                <div class="upload-content">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p>Click to upload or drag and drop</p>
+                    <p class="file-info">CSV file only</p>
+                </div>
+            </div>
+            <button id="downloadTemplate" class="btn-secondary">Download CSV Template</button>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+
+        <div id="treeContainer" class="tree-container" style="display: none;">
+            <div class="controls">
+                <button id="zoomIn" class="control-btn">+</button>
+                <button id="zoomOut" class="control-btn">-</button>
+                <button id="resetView" class="control-btn">Reset</button>
+                <button id="fitView" class="control-btn">Fit</button>
+                <select id="layoutSelect" class="control-select">
+                    <option value="tree">Tree Layout</option>
+                    <option value="force">Force Layout</option>
+                </select>
+            </div>
+            <svg id="familyTree"></svg>
+        </div>
+
+        <div id="personDetails" class="person-details" style="display: none;">
+            <button class="close-btn" id="closeDetails">&times;</button>
+            <div id="detailsContent"></div>
+        </div>
+
+        <div class="stats" id="stats" style="display: none;">
+            <h3>Statistics</h3>
+            <div id="statsContent"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
