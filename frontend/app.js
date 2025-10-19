@@ -153,12 +153,15 @@ function renderTreeLayout(data) {
         return;
     }
 
-    // Build hierarchy for each root
-    const margin = { top: 50, right: 120, bottom: 50, left: 120 };
+    // Build hierarchy for each root - Japanese style (top to bottom)
+    const margin = { top: 60, right: 100, bottom: 60, left: 100 };
     const treeWidth = width - margin.left - margin.right;
     const treeHeight = height - margin.top - margin.bottom;
 
-    const treeLayout = d3.tree().size([treeHeight, treeWidth]);
+    // Vertical tree layout (top to bottom)
+    const treeLayout = d3.tree()
+        .size([treeWidth, treeHeight])
+        .separation((a, b) => (a.parent === b.parent ? 1.2 : 1.5));
 
     let allNodes = [];
     let allLinks = [];
@@ -169,76 +172,128 @@ function renderTreeLayout(data) {
 
         treeLayout(treeData);
 
-        // Offset each tree
+        // Offset each tree horizontally
         const offset = (treeWidth / rootNodes.length) * index;
 
         treeData.descendants().forEach(d => {
-            d.y += offset + margin.left;
-            d.x += margin.top;
+            d.x += margin.left + offset;
+            d.y += margin.top;
         });
 
         allNodes.push(...treeData.descendants());
         allLinks.push(...treeData.links());
     });
 
-    // Draw links
-    g.selectAll('.link')
-        .data(allLinks)
-        .enter()
-        .append('path')
-        .attr('class', 'link parent-child')
-        .attr('d', d3.linkHorizontal()
-            .x(d => d.y)
-            .y(d => d.x));
+    // Draw parent-child links (vertical lines with horizontal connector)
+    allLinks.forEach(link => {
+        const source = link.source;
+        const target = link.target;
 
-    // Draw marriage links
+        // Create path with straight lines
+        const path = g.append('path')
+            .attr('class', 'link parent-child')
+            .attr('d', `
+                M ${source.x} ${source.y}
+                L ${source.x} ${(source.y + target.y) / 2}
+                L ${target.x} ${(source.y + target.y) / 2}
+                L ${target.x} ${target.y}
+            `);
+    });
+
+    // Draw marriage links (horizontal lines between spouses)
+    const marriages = new Set();
     data.relationships.filter(r => r.type === 'marriage').forEach(rel => {
         const person1 = allNodes.find(n => n.data.id === rel.from);
         const person2 = allNodes.find(n => n.data.id === rel.to);
 
         if (person1 && person2) {
-            g.append('line')
-                .attr('class', 'link marriage')
-                .attr('x1', person1.y)
-                .attr('y1', person1.x)
-                .attr('x2', person2.y)
-                .attr('y2', person2.x);
+            const key = [rel.from, rel.to].sort().join('-');
+            if (!marriages.has(key)) {
+                marriages.add(key);
+
+                g.append('line')
+                    .attr('class', 'link marriage')
+                    .attr('x1', person1.x)
+                    .attr('y1', person1.y)
+                    .attr('x2', person2.x)
+                    .attr('y2', person2.y)
+                    .attr('stroke-width', 3);
+            }
         }
     });
 
-    // Draw nodes
+    // Draw nodes with Japanese-style boxes
     const node = g.selectAll('.node')
         .data(allNodes)
         .enter()
         .append('g')
         .attr('class', d => `node ${d.data.gender || ''}`)
-        .attr('transform', d => `translate(${d.y},${d.x})`);
+        .attr('transform', d => `translate(${d.x},${d.y})`);
 
-    node.append('circle')
-        .attr('r', 8)
+    // Box dimensions
+    const boxWidth = 80;
+    const boxHeight = 60;
+
+    // Draw box background
+    node.append('rect')
+        .attr('x', -boxWidth / 2)
+        .attr('y', -boxHeight / 2)
+        .attr('width', boxWidth)
+        .attr('height', boxHeight)
+        .attr('class', 'person-box')
         .on('click', (event, d) => showPersonDetails(d.data));
 
+    // Draw divider line between family name and given name
+    node.append('line')
+        .attr('x1', -boxWidth / 2)
+        .attr('y1', 0)
+        .attr('x2', boxWidth / 2)
+        .attr('y2', 0)
+        .attr('stroke', '#999')
+        .attr('stroke-width', 1);
+
+    // Family name (姓) - top half
     node.append('text')
-        .attr('dy', -15)
+        .attr('dy', -8)
         .attr('text-anchor', 'middle')
-        .text(d => {
-            const person = d.data;
-            const name = `${person.family_name} ${person.first_name}`;
-            return name.length > 15 ? name.substring(0, 15) + '...' : name;
-        })
+        .attr('class', 'family-name-text')
+        .text(d => d.data.family_name || '姓')
         .on('click', (event, d) => showPersonDetails(d.data));
 
-    // Add birth/death years
+    // Given name (名) - bottom half
     node.append('text')
-        .attr('dy', 25)
+        .attr('dy', 18)
+        .attr('text-anchor', 'middle')
+        .attr('class', 'given-name-text')
+        .text(d => d.data.first_name || '名')
+        .on('click', (event, d) => showPersonDetails(d.data));
+
+    // Add furigana if available (small text above)
+    node.append('text')
+        .attr('dy', -boxHeight / 2 - 5)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '9px')
+        .attr('fill', '#666')
+        .text(d => {
+            if (d.data.family_name_furigana || d.data.first_name_furigana) {
+                return `${d.data.family_name_furigana || ''} ${d.data.first_name_furigana || ''}`.trim();
+            }
+            return '';
+        });
+
+    // Add birth-death years below box
+    node.append('text')
+        .attr('dy', boxHeight / 2 + 15)
         .attr('text-anchor', 'middle')
         .attr('font-size', '10px')
         .attr('fill', '#666')
         .text(d => {
             const person = d.data;
-            const birth = person.birth_date ? person.birth_date.split('-')[0] : '?';
+            const birth = person.birth_date ? person.birth_date.split('-')[0] : '';
             const death = person.death_date ? person.death_date.split('-')[0] : '';
-            return death ? `${birth}-${death}` : birth;
+            if (birth && death) return `${birth}-${death}`;
+            if (birth) return birth;
+            return '';
         });
 }
 

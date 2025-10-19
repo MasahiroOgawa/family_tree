@@ -278,6 +278,55 @@ header p {
     fill: #ec4899;
 }
 
+/* Japanese-style person boxes */
+.person-box {
+    fill: white;
+    stroke: #333;
+    stroke-width: 2px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.person-box:hover {
+    fill: #f8f9ff;
+    stroke: #667eea;
+    stroke-width: 3px;
+}
+
+.node.male .person-box {
+    fill: #e3f2fd;
+    stroke: #1976d2;
+}
+
+.node.male .person-box:hover {
+    fill: #bbdefb;
+}
+
+.node.female .person-box {
+    fill: #fce4ec;
+    stroke: #c2185b;
+}
+
+.node.female .person-box:hover {
+    fill: #f8bbd0;
+}
+
+.family-name-text {
+    font-size: 14px;
+    font-weight: 600;
+    fill: #333;
+    cursor: pointer;
+    pointer-events: none;
+}
+
+.given-name-text {
+    font-size: 14px;
+    font-weight: 500;
+    fill: #333;
+    cursor: pointer;
+    pointer-events: none;
+}
+
 .node text {
     font-size: 12px;
     font-weight: 500;
@@ -287,17 +336,18 @@ header p {
 
 .link {
     fill: none;
-    stroke: #999;
+    stroke: #333;
     stroke-width: 2px;
 }
 
 .link.marriage {
-    stroke: #ef4444;
-    stroke-dasharray: 5, 5;
+    stroke: #e91e63;
+    stroke-width: 3px;
 }
 
 .link.parent-child {
-    stroke: #667eea;
+    stroke: #333;
+    stroke-width: 2px;
 }
 
 /* Overlay for modal */
