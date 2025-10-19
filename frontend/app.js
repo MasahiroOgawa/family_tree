@@ -142,162 +142,239 @@ function renderFamilyTree(data) {
 }
 
 function renderTreeLayout(data) {
-    // Find root nodes (people without parents)
-    const rootNodes = Object.keys(data.people).filter(id => {
+    // Find root couples (people without parents) and their spouses
+    const rootPeople = Object.keys(data.people).filter(id => {
         const person = data.people[id];
         return !person.father_id && !person.mother_id;
     });
 
-    if (rootNodes.length === 0) {
+    if (rootPeople.length === 0) {
         showStatus('No root person found. Need at least one person without parents.', 'error');
         return;
     }
 
-    // Build hierarchy for each root - Japanese style (top to bottom)
-    const margin = { top: 80, right: 120, bottom: 80, left: 120 };
-    const treeWidth = width - margin.left - margin.right;
-    const treeHeight = height - margin.top - margin.bottom;
+    const margin = { top: 80, right: 50, bottom: 80, left: 50 };
+    const boxWidth = 100;
+    const boxHeight = 70;
+    const boxSpacing = 20;  // Space between husband and wife
+    const generationSpacing = 150;  // Vertical space between generations
+    const siblingSpacing = 50;  // Space between sibling families
 
-    // Vertical tree layout (top to bottom)
-    const treeLayout = d3.tree()
-        .size([treeWidth, treeHeight])
-        .nodeSize([150, 120])  // Fixed node spacing: [width spacing, height spacing]
-        .separation((a, b) => (a.parent === b.parent ? 1.5 : 2.0));
+    let yOffset = margin.top;
+    const rendered = new Set();  // Track rendered people to avoid duplicates
+    const positions = new Map();  // Store positions of all people
 
-    let allNodes = [];
-    let allLinks = [];
+    // Recursive function to layout families
+    function layoutFamily(personId, x, y, generation) {
+        if (rendered.has(personId)) return { width: 0, positions: [] };
 
-    rootNodes.forEach((rootId, index) => {
-        const root = buildHierarchy(rootId, data.people);
-        const treeData = d3.hierarchy(root);
+        const person = data.people[personId];
+        if (!person) return { width: 0, positions: [] };
 
-        treeLayout(treeData);
+        let allPositions = [];
+        let spouseId = person.married_with;
+        let spouse = spouseId ? data.people[spouseId] : null;
 
-        // Offset each tree horizontally
-        const offset = (treeWidth / rootNodes.length) * index;
+        // Position current person and spouse
+        if (spouse && !rendered.has(spouseId)) {
+            // Couple - place side by side
+            positions.set(personId, { x: x - (boxWidth + boxSpacing) / 2, y, person });
+            positions.set(spouseId, { x: x + (boxWidth + boxSpacing) / 2, y, person: spouse });
+            rendered.add(personId);
+            rendered.add(spouseId);
+            allPositions.push(
+                { x: x - (boxWidth + boxSpacing) / 2, y, person },
+                { x: x + (boxWidth + boxSpacing) / 2, y, person: spouse }
+            );
+        } else if (!rendered.has(personId)) {
+            // Single person
+            positions.set(personId, { x, y, person });
+            rendered.add(personId);
+            allPositions.push({ x, y, person });
+        }
 
-        treeData.descendants().forEach(d => {
-            d.x += margin.left + offset;
-            d.y += margin.top;
+        // Get children
+        const children = Object.values(data.people).filter(p =>
+            p.father_id === personId || p.mother_id === personId ||
+            (spouseId && (p.father_id === spouseId || p.mother_id === spouseId))
+        );
+
+        if (children.length === 0) {
+            return { width: boxWidth * 2 + boxSpacing, positions: allPositions };
+        }
+
+        // Layout children
+        const childY = y + generationSpacing;
+        let childrenResults = [];
+        let totalWidth = 0;
+
+        children.forEach(child => {
+            if (!rendered.has(child.id)) {
+                const result = layoutFamily(child.id, 0, childY, generation + 1);
+                childrenResults.push(result);
+                totalWidth += result.width + siblingSpacing;
+            }
         });
 
-        allNodes.push(...treeData.descendants());
-        allLinks.push(...treeData.links());
+        totalWidth -= siblingSpacing;  // Remove last spacing
+
+        // Center children under parents
+        let childX = x - totalWidth / 2;
+        childrenResults.forEach(result => {
+            const offsetX = childX + result.width / 2;
+            result.positions.forEach(pos => {
+                pos.x += offsetX;
+                positions.set(pos.person.id, pos);
+                allPositions.push(pos);
+            });
+            childX += result.width + siblingSpacing;
+        });
+
+        return {
+            width: Math.max(totalWidth, boxWidth * 2 + boxSpacing),
+            positions: allPositions
+        };
+    }
+
+    // Layout all root families
+    let startX = margin.left + width / 2;
+    rootPeople.forEach((rootId, index) => {
+        if (!rendered.has(rootId)) {
+            layoutFamily(rootId, startX, yOffset, 0);
+        }
     });
 
-    // Draw parent-child links (vertical lines with horizontal connector)
-    allLinks.forEach(link => {
-        const source = link.source;
-        const target = link.target;
+    // Draw connections
+    positions.forEach((pos, personId) => {
+        const person = pos.person;
 
-        // Create path with straight lines
-        const path = g.append('path')
-            .attr('class', 'link parent-child')
-            .attr('d', `
-                M ${source.x} ${source.y}
-                L ${source.x} ${(source.y + target.y) / 2}
-                L ${target.x} ${(source.y + target.y) / 2}
-                L ${target.x} ${target.y}
-            `);
-    });
+        // Draw line to children
+        const children = Object.values(data.people).filter(p =>
+            p.father_id === personId || p.mother_id === personId
+        );
 
-    // Draw marriage links (horizontal lines between spouses)
-    const marriages = new Set();
-    data.relationships.filter(r => r.type === 'marriage').forEach(rel => {
-        const person1 = allNodes.find(n => n.data.id === rel.from);
-        const person2 = allNodes.find(n => n.data.id === rel.to);
+        if (children.length > 0) {
+            const childPositions = children.map(c => positions.get(c.id)).filter(p => p);
+            if (childPositions.length > 0) {
+                const midY = pos.y + generationSpacing / 2;
 
-        if (person1 && person2) {
-            const key = [rel.from, rel.to].sort().join('-');
-            if (!marriages.has(key)) {
-                marriages.add(key);
+                // Vertical line down from parent(s)
+                const spousePos = person.married_with ? positions.get(person.married_with) : null;
+                const parentX = spousePos ? (pos.x + spousePos.x) / 2 : pos.x;
 
                 g.append('line')
+                    .attr('class', 'link parent-child')
+                    .attr('x1', parentX)
+                    .attr('y1', pos.y + boxHeight / 2)
+                    .attr('x2', parentX)
+                    .attr('y2', midY);
+
+                // Horizontal line connecting children
+                if (childPositions.length > 1) {
+                    const leftX = Math.min(...childPositions.map(p => p.x));
+                    const rightX = Math.max(...childPositions.map(p => p.x));
+
+                    g.append('line')
+                        .attr('class', 'link parent-child')
+                        .attr('x1', leftX)
+                        .attr('y1', midY)
+                        .attr('x2', rightX)
+                        .attr('y2', midY);
+                }
+
+                // Lines down to each child
+                childPositions.forEach(childPos => {
+                    g.append('line')
+                        .attr('class', 'link parent-child')
+                        .attr('x1', childPos.x)
+                        .attr('y1', midY)
+                        .attr('x2', childPos.x)
+                        .attr('y2', childPos.y - boxHeight / 2);
+                });
+            }
+        }
+
+        // Draw marriage line
+        if (person.married_with) {
+            const spousePos = positions.get(person.married_with);
+            if (spousePos && pos.x < spousePos.x) {  // Draw only once
+                g.append('line')
                     .attr('class', 'link marriage')
-                    .attr('x1', person1.x)
-                    .attr('y1', person1.y)
-                    .attr('x2', person2.x)
-                    .attr('y2', person2.y)
+                    .attr('x1', pos.x + boxWidth / 2)
+                    .attr('y1', pos.y)
+                    .attr('x2', spousePos.x - boxWidth / 2)
+                    .attr('y2', spousePos.y)
                     .attr('stroke-width', 3);
             }
         }
     });
 
-    // Draw nodes with Japanese-style boxes
-    const node = g.selectAll('.node')
-        .data(allNodes)
-        .enter()
-        .append('g')
-        .attr('class', d => `node ${d.data.gender || ''}`)
-        .attr('transform', d => `translate(${d.x},${d.y})`);
+    // Draw person boxes
+    positions.forEach((pos, personId) => {
+        const person = pos.person;
 
-    // Box dimensions - larger to prevent text overflow
-    const boxWidth = 100;
-    const boxHeight = 70;
+        const node = g.append('g')
+            .attr('class', `node ${person.gender || ''}`)
+            .attr('transform', `translate(${pos.x},${pos.y})`);
 
-    // Draw box background
-    node.append('rect')
-        .attr('x', -boxWidth / 2)
-        .attr('y', -boxHeight / 2)
-        .attr('width', boxWidth)
-        .attr('height', boxHeight)
-        .attr('class', 'person-box')
-        .attr('rx', 4)  // Rounded corners
-        .attr('ry', 4)
-        .on('click', (event, d) => showPersonDetails(d.data));
+        // Draw box
+        node.append('rect')
+            .attr('x', -boxWidth / 2)
+            .attr('y', -boxHeight / 2)
+            .attr('width', boxWidth)
+            .attr('height', boxHeight)
+            .attr('class', 'person-box')
+            .attr('rx', 4)
+            .attr('ry', 4)
+            .on('click', () => showPersonDetails(person));
 
-    // Draw divider line between family name and given name
-    node.append('line')
-        .attr('x1', -boxWidth / 2)
-        .attr('y1', 0)
-        .attr('x2', boxWidth / 2)
-        .attr('y2', 0)
-        .attr('stroke', '#999')
-        .attr('stroke-width', 1);
+        // Divider line
+        node.append('line')
+            .attr('x1', -boxWidth / 2)
+            .attr('y1', 0)
+            .attr('x2', boxWidth / 2)
+            .attr('y2', 0)
+            .attr('stroke', '#999')
+            .attr('stroke-width', 1);
 
-    // Family name (姓) - top half
-    node.append('text')
-        .attr('dy', -10)
-        .attr('text-anchor', 'middle')
-        .attr('class', 'family-name-text')
-        .text(d => d.data.family_name || '姓')
-        .on('click', (event, d) => showPersonDetails(d.data));
+        // Family name
+        node.append('text')
+            .attr('dy', -10)
+            .attr('text-anchor', 'middle')
+            .attr('class', 'family-name-text')
+            .text(person.family_name || '姓')
+            .on('click', () => showPersonDetails(person));
 
-    // Given name (名) - bottom half
-    node.append('text')
-        .attr('dy', 20)
-        .attr('text-anchor', 'middle')
-        .attr('class', 'given-name-text')
-        .text(d => d.data.first_name || '名')
-        .on('click', (event, d) => showPersonDetails(d.data));
+        // Given name
+        node.append('text')
+            .attr('dy', 20)
+            .attr('text-anchor', 'middle')
+            .attr('class', 'given-name-text')
+            .text(person.first_name || '名')
+            .on('click', () => showPersonDetails(person));
 
-    // Add furigana if available (small text above box)
-    node.append('text')
-        .attr('dy', -boxHeight / 2 - 10)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', '10px')
-        .attr('fill', '#666')
-        .text(d => {
-            if (d.data.family_name_furigana || d.data.first_name_furigana) {
-                return `${d.data.family_name_furigana || ''} ${d.data.first_name_furigana || ''}`.trim();
-            }
-            return '';
-        });
+        // Furigana
+        if (person.family_name_furigana || person.first_name_furigana) {
+            node.append('text')
+                .attr('dy', -boxHeight / 2 - 10)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '10px')
+                .attr('fill', '#666')
+                .text(`${person.family_name_furigana || ''} ${person.first_name_furigana || ''}`.trim());
+        }
 
-    // Add birth-death years below box
-    node.append('text')
-        .attr('dy', boxHeight / 2 + 20)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', '11px')
-        .attr('fill', '#666')
-        .text(d => {
-            const person = d.data;
-            const birth = person.birth_date ? person.birth_date.split('-')[0] : '';
-            const death = person.death_date ? person.death_date.split('-')[0] : '';
-            if (birth && death) return `${birth}-${death}`;
-            if (birth) return birth;
-            return '';
-        });
+        // Birth/death years
+        const birth = person.birth_date ? person.birth_date.split('-')[0] : '';
+        const death = person.death_date ? person.death_date.split('-')[0] : '';
+        if (birth || death) {
+            node.append('text')
+                .attr('dy', boxHeight / 2 + 20)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '11px')
+                .attr('fill', '#666')
+                .text(birth && death ? `${birth}-${death}` : birth);
+        }
+    });
 }
 
 function renderForceLayout(data) {
