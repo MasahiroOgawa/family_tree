@@ -186,5 +186,28 @@ def validate_csv():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/sample', methods=['GET'])
+def get_sample_data():
+    """Return sample family tree data for demonstration"""
+    try:
+        # Load the example CSV file
+        sample_file_path = os.path.join(os.path.dirname(__file__), '..', 'example_family.csv')
+
+        if not os.path.exists(sample_file_path):
+            return jsonify({'error': 'Sample file not found'}), 404
+
+        with open(sample_file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        tree = parse_csv(content)
+
+        return jsonify({
+            'success': True,
+            'data': tree.to_dict()
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

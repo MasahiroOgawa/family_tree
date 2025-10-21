@@ -4,6 +4,7 @@ A modern web-based application for visualizing family trees from CSV data. Uploa
 
 ## Features
 
+- **Load Sample**: Instantly view a sample family tree without uploading a file
 - **CSV Upload**: Easy drag-and-drop or click-to-upload CSV files
 - **Interactive Visualization**: Two layout options:
   - Tree Layout: Traditional hierarchical family tree
@@ -14,6 +15,7 @@ A modern web-based application for visualizing family trees from CSV data. Uploa
 - **Color-Coded Nodes**: Visual distinction between genders
 - **Furigana Support**: Japanese reading support for names
 - **Template Generator**: Download a pre-filled example CSV to get started
+- **Unit Tests**: Comprehensive test suite for backend functionality
 
 ## CSV File Format
 
@@ -126,7 +128,14 @@ For more installation options, visit [uv documentation](https://docs.astral.sh/u
 
 ## Usage Guide
 
-### 1. Upload Your CSV File
+### 1. Load Sample Data (Quickest Way to Start)
+
+**Click "Load Sample Family Tree"**
+- No file upload needed
+- Instantly displays a sample family tree with multiple generations
+- Perfect for seeing how the application works
+
+### 2. Upload Your CSV File
 
 **Option A: Drag and Drop**
 - Drag your CSV file onto the upload box
@@ -137,7 +146,7 @@ For more installation options, visit [uv documentation](https://docs.astral.sh/u
 - Select your CSV file from the file dialog
 - Click "Open"
 
-### 2. Download Template (Optional)
+### 3. Download Template (Optional)
 
 - Click the "Download CSV Template" button
 - A pre-filled example CSV will be downloaded
@@ -206,6 +215,68 @@ family_tree/
 - **Visualization**: D3.js v7
 - **API**: RESTful API with JSON
 
+## Testing
+
+The application includes comprehensive unit tests for all backend functionality.
+
+### Running Tests
+
+```bash
+# Navigate to backend directory
+cd backend
+
+# Run all tests
+python -m unittest test_app.py
+
+# Run tests with verbose output
+python -m unittest test_app.py -v
+
+# Run specific test class
+python -m unittest test_app.TestPerson
+
+# Run a specific test
+python -m unittest test_app.TestPerson.test_person_initialization
+```
+
+### Test Coverage
+
+The test suite covers:
+
+- **Person Class Tests**:
+  - Person initialization with various data
+  - Children IDs parsing and handling
+  - Person to dictionary conversion
+
+- **FamilyTree Class Tests**:
+  - Adding people to the tree
+  - Building parent-child relationships
+  - Building marriage relationships (avoiding duplicates)
+  - Tree to dictionary conversion
+
+- **CSV Parsing Tests**:
+  - Simple CSV parsing
+  - CSV with relationships
+  - Skipping empty rows
+  - Handling various data formats
+
+- **API Endpoint Tests**:
+  - Index route
+  - Upload endpoint (valid/invalid files)
+  - Validate endpoint (valid/invalid data)
+  - Sample data endpoint
+
+### Expected Test Output
+
+When all tests pass successfully:
+
+```
+.................
+----------------------------------------------------------------------
+Ran 17 tests in 0.XXXs
+
+OK
+```
+
 ## API Endpoints
 
 ### POST /api/upload
@@ -234,6 +305,21 @@ Validate CSV structure and relationships
   "errors": [],
   "warnings": [],
   "person_count": 10
+}
+```
+
+### GET /api/sample
+Load sample family tree data for demonstration
+
+**Request**: None (GET request)
+**Response**:
+```json
+{
+  "success": true,
+  "data": {
+    "people": {...},
+    "relationships": [...]
+  }
 }
 ```
 
