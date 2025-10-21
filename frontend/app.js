@@ -13,6 +13,7 @@ function initializeApp() {
     const fileInput = document.getElementById('fileInput');
     const uploadBox = document.getElementById('uploadBox');
     const downloadTemplate = document.getElementById('downloadTemplate');
+    const loadSample = document.getElementById('loadSample');
 
     // File upload handling
     uploadBox.addEventListener('click', () => fileInput.click());
@@ -34,6 +35,9 @@ function initializeApp() {
         const file = e.dataTransfer.files[0];
         if (file) handleFile(file);
     });
+
+    // Load sample data
+    loadSample.addEventListener('click', loadSampleData);
 
     // Download template
     downloadTemplate.addEventListener('click', generateTemplate);
@@ -105,6 +109,29 @@ async function handleFile(file) {
         if (result.success) {
             familyData = result.data;
             showStatus(`Successfully loaded ${Object.keys(familyData.people).length} people`, 'success');
+            renderFamilyTree(familyData);
+            showStats(familyData);
+        } else {
+            showStatus('Error: ' + result.error, 'error');
+        }
+    } catch (error) {
+        showStatus('Error connecting to server: ' + error.message, 'error');
+    }
+}
+
+async function loadSampleData() {
+    try {
+        showStatus('Loading sample family tree...', 'warning');
+
+        const response = await fetch('http://localhost:5000/api/sample', {
+            method: 'GET'
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            familyData = result.data;
+            showStatus(`Sample family tree loaded with ${Object.keys(familyData.people).length} people`, 'success');
             renderFamilyTree(familyData);
             showStats(familyData);
         } else {

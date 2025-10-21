@@ -76,6 +76,30 @@ header p {
     color: #666 !important;
 }
 
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.btn-primary {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: #059669;
+}
+
 .btn-secondary {
     background: #667eea;
     color: white;
@@ -85,8 +109,6 @@ header p {
     font-size: 1rem;
     cursor: pointer;
     transition: background 0.3s ease;
-    display: block;
-    margin: 0 auto;
 }
 
 .btn-secondary:hover {
