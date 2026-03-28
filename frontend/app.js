@@ -99,7 +99,7 @@ async function handleFile(file) {
     try {
         showStatus('Processing file...', 'warning');
 
-        const response = await fetch('http://localhost:5000/api/upload', {
+        const response = await fetch('/api/upload', {
             method: 'POST',
             body: formData
         });
@@ -123,7 +123,7 @@ async function loadSampleData() {
     try {
         showStatus('Loading sample family tree...', 'warning');
 
-        const response = await fetch('http://localhost:5000/api/sample', {
+        const response = await fetch('/api/sample', {
             method: 'GET'
         });
 
